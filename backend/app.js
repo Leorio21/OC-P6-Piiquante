@@ -1,7 +1,7 @@
-import express from 'express';
-import mongoose from 'mongoose';
+const express = require('express')
+const mongoose = require('mongoose')
 
-/* routes */
+const userRoutes = require('./routes/user')
 
 const app = express();
 
@@ -20,8 +20,8 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/api/auth')
+app.use('/api/auth', userRoutes)
 
-app.use('/api/sauces')
+//app.use('/api/sauces')
 
 module.exports = app;
