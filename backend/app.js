@@ -2,13 +2,17 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const mongoSanitize = require('express-mongo-sanitize');
+require('dotenv').config();
+
+const mongoDbUser = process.env.MONGODB_USER;
+const mongoDbPassword = process.env.MONGODB_PASSWORD;
 
 const userRoutes = require('./routes/user');
 const sauceRoutes = require('./routes/sauce');
 
 const app = express();
 
-mongoose.connect('mongodb+srv://usermaster:Orion211@cluster0.2h3zv.mongodb.net/?retryWrites=true&w=majority', {
+mongoose.connect(`mongodb+srv://${mongoDbUser}:${mongoDbPassword}@cluster0.2h3zv.mongodb.net/?retryWrites=true&w=majority`, {
     useNewUrlParser: true,
     useUnifiedTopology: true })
     .then(() => console.log('Connexion à MongoDB réussi !'))
