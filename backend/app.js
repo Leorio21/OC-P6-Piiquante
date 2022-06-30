@@ -21,7 +21,10 @@ mongoose.connect(`mongodb+srv://${mongoDbUser}:${mongoDbPassword}@${mongoDbClust
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}))
-app.use(mongoSanitize({allowDots: true}));
+app.use(mongoSanitize({
+    allowDots: true,
+    replaceWith: '_'
+}));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
