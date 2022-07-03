@@ -19,7 +19,7 @@ exports.getOneSauce = async (req, res, next) => {
     }
 };
 
-exports.createSauce = (req, res, next) => {
+exports.createSauce = async (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
     delete sauceObject._id;
     const sauce = new Sauce({
@@ -29,7 +29,7 @@ exports.createSauce = (req, res, next) => {
         dislikes: 0,
     });
     try {
-        sauce.save()
+        await sauce.save()
         res.status(201).json({message: 'Sauce enregistrée !'})
     } catch (error) {
         res.status(400).json({error})
@@ -44,7 +44,7 @@ exports.likeSauce = async (req, res, next) => {
     try {
         const sauce = await Sauce.findOne({_id: req.params.id,})
 
-        if(sauce.usersLiked.includes(req.body.userId) && req.body.like === 1) {
+        if((sauce.usersLiked.includes(req.body.userId) && req.body.like === 1) || (sauce.usersDisliked.includes(req.body.userId) && req.body.like === -1)) {
             return res.status(201).json({message: 'Vote enregistré !'})
         } else if(sauce.usersLiked.includes(req.body.userId) && req.body.like !== 1) {
             await Sauce.findOneAndUpdate(
@@ -54,10 +54,6 @@ exports.likeSauce = async (req, res, next) => {
                     $pull: {usersLiked: req.body.userId}
                 })
                 res.status(201).json({message: 'Vote annulé !'})
-        }
-
-        if(sauce.usersDisliked.includes(req.body.userId) && req.body.like === -1) {
-            return res.status(201).json({message: 'Vote enregistré !'})
         } else if(sauce.usersDisliked.includes(req.body.userId) && req.body.like !== -1) {
             await Sauce.findOneAndUpdate(
                 {_id: req.params.id},
