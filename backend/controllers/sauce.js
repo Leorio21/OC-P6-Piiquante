@@ -87,17 +87,25 @@ exports.likeSauce = async (req, res, next) => {
                     })
                     return res.status(201).json({message: 'Vote enregistré !'})
         }
+        return res.status(400).json({ error })
     } catch (error) {
         return res.status(400).json({ error })
     }
 }
 
 exports.modifySauce = async (req, res, next) => {
-    const sauceObject = req.file ?
-    {
-        ...JSON.parse(req.body.sauce),
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    } : { ...req.body };
+    let sauceObject = {}
+        if(req.file) {
+            const sauce = await Sauce.findOne({ _id: req.params.id })
+            const filename = sauce.imageUrl.split('/images/')[1];
+            await fs.unlink(`images/${filename}`)
+            sauceObject = {
+                ...JSON.parse(req.body.sauce),
+                imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+            }
+        } else {
+            sauceObject = { ...req.body };
+        }
     try {
         await Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
         res.status(200).json({ message: 'Sauce modifiée !'})
@@ -110,9 +118,8 @@ exports.deleteSauce = async (req, res, next) => {
     try {
         const sauce = await Sauce.findOne({ _id: req.params.id })
         const filename = sauce.imageUrl.split('/images/')[1];
-        
         await fs.unlink(`images/${filename}`)
-        Sauce.deleteOne({ _id: req.params.id })
+        await Sauce.deleteOne({ _id: req.params.id })
         res.status(200).json({ message: 'Sauce supprimée !'})
     } catch (error) {
         res.status(400).json({ error })
