@@ -5,6 +5,10 @@ const User = require('../models/user')
 
 exports.signup = async (req, res, next) => {
     try {
+        const userExist = await User.findOne({email: req.body.email});
+        if (userExist != null) {
+            return res.status(403).json({message : "Un compte existe déjà avec cette adresse mail"})
+        }
         hash = await bcrypt.hash(req.body.password, 10)
         const user = new User({
             email: req.body.email,

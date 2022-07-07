@@ -4,18 +4,18 @@ const fs = require('fs/promises');
 exports.getAllSauces = async (req, res, next) => {
     try {
         const sauces = await Sauce.find()
-        res.status(200).json(sauces)
+        return res.status(200).json(sauces)
     } catch (error) {
-        res.status(400).json({ error })
+        return res.status(400).json({ error })
     }
 };
 
 exports.getOneSauce = async (req, res, next) => {
     try {
         const sauce = await Sauce.findOne({ _id: req.params.id})
-        res.status(200).json(sauce)
+        return res.status(200).json(sauce)
     } catch (error) {
-        res.status(400).json({ error })
+        return res.status(400).json({ error })
     }
 };
 
@@ -27,12 +27,16 @@ exports.createSauce = async (req, res, next) => {
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
         likes: 0,
         dislikes: 0,
+        usersLiked: [],
+        usersDisliked: []
     });
     try {
         await sauce.save()
-        res.status(201).json({message: 'Sauce enregistrée !'})
+        return res.status(201).json({message: 'Sauce enregistrée !'})
     } catch (error) {
-        res.status(400).json({error})
+        const filename = sauce.imageUrl.split('/images/')[1];
+        await fs.unlink(`images/${filename}`)
+        return res.status(400).json({error})
     }
 };
 
@@ -53,7 +57,7 @@ exports.likeSauce = async (req, res, next) => {
                     $inc: {likes: -1},
                     $pull: {usersLiked: req.body.userId}
                 })
-                res.status(201).json({message: 'Vote annulé !'})
+                return res.status(201).json({message: 'Vote annulé !'})
         } else if(sauce.usersDisliked.includes(req.body.userId) && req.body.like !== -1) {
             await Sauce.findOneAndUpdate(
                 {_id: req.params.id},
@@ -61,7 +65,7 @@ exports.likeSauce = async (req, res, next) => {
                     $inc: {dislikes: -1},
                     $pull: {usersDisliked: req.body.userId}
                 })
-                res.status(201).json({message: 'Vote annulé !'})
+                return res.status(201).json({message: 'Vote annulé !'})
         }
 
         switch(req.body.like) {
@@ -90,9 +94,11 @@ exports.likeSauce = async (req, res, next) => {
 }
 
 exports.modifySauce = async (req, res, next) => {
-    let sauceObject = {}
+    let sauce;
+    try {
+        sauce = await Sauce.findOne({ _id: req.params.id })
+        let sauceObject = {}
         if(req.file) {
-            const sauce = await Sauce.findOne({ _id: req.params.id })
             const filename = sauce.imageUrl.split('/images/')[1];
             await fs.unlink(`images/${filename}`)
             sauceObject = {
@@ -102,11 +108,14 @@ exports.modifySauce = async (req, res, next) => {
         } else {
             sauceObject = { ...req.body };
         }
-    try {
         await Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-        res.status(200).json({ message: 'Sauce modifiée !'})
+        return res.status(200).json({ message: 'Sauce modifiée !'})
     } catch (error) {
-        res.status(400).json({ error })
+        if (sauce && req.file) {
+            const filename = sauce.imageUrl.split('/images/')[1];
+            await fs.unlink(`images/${filename}`)
+        }
+        return res.status(400).json({ error })
     }
 };
 
@@ -116,8 +125,8 @@ exports.deleteSauce = async (req, res, next) => {
         const filename = sauce.imageUrl.split('/images/')[1];
         await fs.unlink(`images/${filename}`)
         await Sauce.deleteOne({ _id: req.params.id })
-        res.status(200).json({ message: 'Sauce supprimée !'})
+        return res.status(200).json({ message: 'Sauce supprimée !'})
     } catch (error) {
-        res.status(400).json({ error })
+        return res.status(400).json({ error })
     }
 };
