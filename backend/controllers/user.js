@@ -1,35 +1,35 @@
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-const User = require('../models/user')
+const User = require('../models/user');
 
 exports.signup = async (req, res, next) => {
     try {
         const userExist = await User.findOne({email: req.body.email});
         if (userExist != null) {
-            return res.status(403).json({message : "Un compte existe déjà avec cette adresse mail"})
+            return res.status(403).json({message : "Un compte existe déjà avec cette adresse mail"});
         }
-        hash = await bcrypt.hash(req.body.password, 10)
+        hash = await bcrypt.hash(req.body.password, 12);
         const user = new User({
             email: req.body.email,
             password: hash
-        })
-        await user.save()
-        return res.status(201).json({message: 'User enregistré !'})
+        });
+        await user.save();
+        return res.status(201).json({message: 'User enregistré !'});
     } catch (error) {
-        return res.status(400).json({error})
+        return res.status(400).json({error});
     }
 }
 
 exports.login = async (req, res, next) => {
     try {
-        const user = await User.findOne({ email: req.body.email})
+        const user = await User.findOne({ email: req.body.email});
         if (!user) {
-            return res.status(404).json({error: "Utilisateur non trouvé"})
+            return res.status(404).json({error: "Utilisateur non trouvé"});
         }
-        const valid = await bcrypt.compare(req.body.password, user.password)
+        const valid = await bcrypt.compare(req.body.password, user.password);
             if(!valid) {
-                res.status(403).json({error: "Mot de passe incorrect"})
+                res.status(403).json({error: "Mot de passe incorrect"});
             }
             return res.status(200).json({
                 userId: user._id,
@@ -38,8 +38,8 @@ exports.login = async (req, res, next) => {
                     process.env.RANDOM_KEY_TOKEN,
                     { expiresIn : '24h'}
                 )
-            })
+            });
         } catch (error) {
-            return res.status(500).json({error})
+            return res.status(500).json({error});
         }
 }
