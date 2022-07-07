@@ -17,7 +17,7 @@ exports.signup = async (req, res, next) => {
         await user.save();
         return res.status(201).json({message: 'User enregistré !'});
     } catch (error) {
-        return res.status(400).json({error});
+        return res.status(400).json(error);
     }
 }
 
@@ -25,11 +25,11 @@ exports.login = async (req, res, next) => {
     try {
         const user = await User.findOne({ email: req.body.email});
         if (!user) {
-            return res.status(404).json({error: "Utilisateur non trouvé"});
+            return res.status(403).json({message: "Nom d'utilisateur / Mot de passe incorrect"});
         }
         const valid = await bcrypt.compare(req.body.password, user.password);
             if(!valid) {
-                res.status(403).json({error: "Mot de passe incorrect"});
+                return res.status(403).json({message: "Nom d'utilisateur / Mot de passe incorrect"});
             }
             return res.status(200).json({
                 userId: user._id,
@@ -40,6 +40,6 @@ exports.login = async (req, res, next) => {
                 )
             });
         } catch (error) {
-            return res.status(500).json({error});
+            return res.status(500).json(error);
         }
 }
