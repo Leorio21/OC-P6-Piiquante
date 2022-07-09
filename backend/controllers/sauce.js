@@ -50,7 +50,8 @@ exports.likeSauce = async (req, res, next) => {
 
         if((sauce.usersLiked.includes(req.body.userId) && req.body.like === 1) || (sauce.usersDisliked.includes(req.body.userId) && req.body.like === -1)) {
             return res.status(201).json({message: 'Vote enregistré !'});
-        } else if(sauce.usersLiked.includes(req.body.userId) && req.body.like !== 1) {
+        }
+        if(sauce.usersLiked.includes(req.body.userId) && req.body.like !== 1) {
             await Sauce.findOneAndUpdate(
                 {_id: req.params.id},
                 {
@@ -58,7 +59,8 @@ exports.likeSauce = async (req, res, next) => {
                     $pull: {usersLiked: req.body.userId}
                 });
                 return res.status(201).json({message: 'Vote annulé !'});
-        } else if(sauce.usersDisliked.includes(req.body.userId) && req.body.like !== -1) {
+        }
+        if(sauce.usersDisliked.includes(req.body.userId) && req.body.like !== -1) {
             await Sauce.findOneAndUpdate(
                 {_id: req.params.id},
                 {
