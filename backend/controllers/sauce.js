@@ -41,11 +41,11 @@ exports.createSauce = async (req, res, next) => {
 };
 
 exports.likeSauce = async (req, res, next) => {
-    const likeOptions = [1, 0, -1];
-    if(!likeOptions.includes(req.body.like)) {
-        return res.status(400).json({ error });
-    }
     try {
+        const likeOptions = [1, 0, -1];
+        if(!likeOptions.includes(req.body.like)) {
+            throw "Action incorrect";
+        }
         const sauce = await Sauce.findOne({_id: req.params.id,});
 
         if((sauce.usersLiked.includes(req.body.userId) && req.body.like === 1) || (sauce.usersDisliked.includes(req.body.userId) && req.body.like === -1)) {
@@ -89,7 +89,7 @@ exports.likeSauce = async (req, res, next) => {
                     });
                     return res.status(201).json({message: 'Vote enregistré !'});
         }
-        return res.status(400).json({ error });
+        throw "Erreur du traitement de la demande";
     } catch (error) {
         return res.status(400).json({ error });
     }
@@ -100,7 +100,7 @@ exports.modifySauce = async (req, res, next) => {
     try {
         sauce = await Sauce.findOne({ _id: req.params.id });
         if(sauce.userId != req.auth.userId) {
-            return res.status(403).json({error})
+            throw "Action non authorisée";
         }
         let sauceObject = {};
         if(req.file) {
@@ -128,13 +128,13 @@ exports.deleteSauce = async (req, res, next) => {
     try {
         const sauce = await Sauce.findOne({ _id: req.params.id });
         if(sauce.userId != req.auth.userId) {
-            return res.status(403).json({error})
+            throw "Action non authorisée";
         }
         const filename = sauce.imageUrl.split('/images/')[1];
         await fs.unlink(`images/${filename}`);
         await Sauce.deleteOne({ _id: req.params.id });
         return res.status(200).json({ message: 'Sauce supprimée !'});
     } catch (error) {
-        return res.status(400).json({ error });
+        return res.status(400).json({ message: error });
     }
 };
