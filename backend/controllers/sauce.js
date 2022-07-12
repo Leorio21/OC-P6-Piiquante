@@ -6,7 +6,7 @@ exports.getAllSauces = async (req, res, next) => {
         const sauces = await Sauce.find();
         return res.status(200).json(sauces);
     } catch (error) {
-        return res.status(400).json({ error });
+        return res.status(400).json({ message: error });
     }
 };
 
@@ -15,33 +15,45 @@ exports.getOneSauce = async (req, res, next) => {
         const sauce = await Sauce.findOne({ _id: req.params.id});
         return res.status(200).json(sauce);
     } catch (error) {
-        return res.status(400).json({ error });
+        return res.status(400).json({ message: error });
     }
 };
 
 exports.createSauce = async (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
     delete sauceObject._id;
-    const sauce = new Sauce({
-        ...sauceObject,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
-        likes: 0,
-        dislikes: 0,
-        usersLiked: [],
-        usersDisliked: []
-    });
+    let sauce;
     try {
+        if(sauceObject.userId != req.auth.userId) {
+            throw "Action non authorisée";
+        }
+        if(!req.file) {
+            throw("Seul les fichiers images .jpg .jpeg .gif .png .webp sont autorisés")
+        }
+        sauce = new Sauce({
+            ...sauceObject,
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
+            likes: 0,
+            dislikes: 0,
+            usersLiked: [],
+            usersDisliked: []
+        });
         await sauce.save();
         return res.status(201).json({message: 'Sauce enregistrée !'});
     } catch (error) {
-        const filename = sauce.imageUrl.split('/images/')[1];
-        await fs.unlink(`images/${filename}`);
-        return res.status(400).json({error});
+        if(req.file) {
+            const filename = sauce.imageUrl.split('/images/')[1];
+            await fs.unlink(`images/${filename}`);
+        }
+        return res.status(400).json({ message: error });
     }
 };
 
 exports.likeSauce = async (req, res, next) => {
     try {
+        if(req.body.userId != req.auth.userId) {
+            throw "Action non authorisée";
+        }
         const likeOptions = [1, 0, -1];
         if(!likeOptions.includes(req.body.like)) {
             throw "Action incorrect";
@@ -91,7 +103,7 @@ exports.likeSauce = async (req, res, next) => {
         }
         throw "Erreur du traitement de la demande";
     } catch (error) {
-        return res.status(400).json({ error });
+        return res.status(400).json({ message: error });
     }
 }
 
@@ -111,7 +123,11 @@ exports.modifySauce = async (req, res, next) => {
                 imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
             };
         } else {
-            sauceObject = { ...req.body };
+            if (req.body.sauce) {
+                throw("Seul les fichiers images .jpg .jpeg .gif .png .webp sont autorisés")
+            } else {
+                sauceObject = { ...req.body };
+            }
         }
         await Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id });
         return res.status(200).json({ message: 'Sauce modifiée !'});
@@ -120,7 +136,8 @@ exports.modifySauce = async (req, res, next) => {
             const filename = sauce.imageUrl.split('/images/')[1];
             await fs.unlink(`images/${filename}`);
         }
-        return res.status(400).json({ error });
+        console.log("msg : " + error);
+        return res.status(400).json({ message: error });
     }
 };
 

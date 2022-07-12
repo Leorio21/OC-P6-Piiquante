@@ -12,6 +12,6 @@ module.exports = async (req, res, next) => {
             next();
         }
     } catch {
-        return res.status(401).json({ error: 'Requête non authentifiée'});
+        return res.status(401).json({ message: 'Requête non authentifiée'});
     }
 }

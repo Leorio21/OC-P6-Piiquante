@@ -13,7 +13,7 @@ exports.signup = async (req, res, next) => {
         await user.save();
         return res.status(201).json({message: 'User enregistré !'});
     } catch (error) {
-        return res.status(400).json({error: error.message});
+        return res.status(400).json({message: error});
     }
 }
 
@@ -36,6 +36,6 @@ exports.login = async (req, res, next) => {
                 )
             });
         } catch (error) {
-            return res.status(404).json(error);
+            return res.status(404).json({ message: error });
         }
 }
