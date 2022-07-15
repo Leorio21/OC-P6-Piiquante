@@ -115,9 +115,8 @@ exports.modifySauce = async (req, res, next) => {
             throw "Action non authorisée";
         }
         let sauceObject = {};
+        const filename = sauce.imageUrl.split('/images/')[1];
         if(req.file) {
-            const filename = sauce.imageUrl.split('/images/')[1];
-            await fs.unlink(`images/${filename}`);
             sauceObject = {
                 ...JSON.parse(req.body.sauce),
                 imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
@@ -130,6 +129,9 @@ exports.modifySauce = async (req, res, next) => {
             }
         }
         await Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id });
+        if (req.file) {
+            await fs.unlink(`images/${filename}`);
+        }
         return res.status(200).json({ message: 'Sauce modifiée !'});
     } catch (error) {
         if (sauce && req.file) {
