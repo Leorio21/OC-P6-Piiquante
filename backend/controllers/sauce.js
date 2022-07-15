@@ -138,7 +138,6 @@ exports.modifySauce = async (req, res, next) => {
             const filename = sauce.imageUrl.split('/images/')[1];
             await fs.unlink(`images/${filename}`);
         }
-        console.log("msg : " + error);
         return res.status(400).json({ message: error });
     }
 };
